@@ -3,7 +3,7 @@ This builds a wheel out of the stub located  on your computer that you can then 
 
 
 ### Build and install
-You need to have Fusion 360 installed, tested on mac might/should work on windows.
+You need to have Fusion 360 installed, you should be using python 3.5.3 because that's what Fusion is using.
 
 ### Wheel
 Download the wheel located in releases and `pip install path_to_wheel`

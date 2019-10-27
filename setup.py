@@ -1,7 +1,7 @@
 from setuptools import setup
 # To use a consistent encoding
 from codecs import open
-from os import path, name as os_name, listdir
+from os import path, name as os_name, listdir, makedirs
 from shutil import copy2
 from sys import exit as sys_exit
 import re
@@ -38,6 +38,7 @@ def get_version(*file_paths):
 def copy_files():
     # Try to build the paths depending on OS
     home = path.expanduser("~")
+
     if os_name == "posix":
         user_dir = "Library/Application Support"
         executable = "Autodesk Fusion 360.app"
@@ -49,23 +50,35 @@ def copy_files():
     else:
         sys_exit(-1)
         return
+    production_path = path.realpath(path.join(home, user_dir, "Autodesk", "webdeploy", "production"))
 
-    executable_path = path.realpath(path.join(home, user_dir, "Autodesk", "webdeploy", "production", executable))
+    if os_name == "nt":
+        for folder in listdir(production_path):
+            if path.exists(path.join(production_path, folder, executable)):
+                executable_path = path.join(production_path, folder, executable)
+                break
+    else:
+        executable_path = path.join(production_path, executable)
+
     parent = path.dirname(executable_path)
-    packages_location = path.join(parent, extra, "APi", "Python", "packages", "adsk")
+    packages_location = path.join(parent, extra, "Api", "Python", "packages", "adsk")
     api_location = path.join(packages_location, "defs", "adsk")
 
     # Copy the files to our local directory
+    makedirs(path.join(here, "adsk"), exist_ok=True)
     for x in listdir(api_location):
         copy2(path.join(api_location, x), path.join(here, "adsk"))
 
     # Get the version from adsk files (hopefully it is the correct version string)
     # and add it to our package.
-    version_from = path.join(packages_location, "core.py")
-    with open(path.join(here, "adsk", "__init__.py"), "w") as fp:
-        st = '__version__ = "{}"\n'.format(get_version(version_from))
-        fp.write(st)
-
+    init = path.join(here, "adsk", "__init__.py")
+    if path.isfile(init):
+        version_from = path.join(packages_location, "core.py")
+        with open(init, "w") as fp:
+            st = '__version__ = "{}"\n'.format(get_version(version_from))
+            fp.write(st)
+    else:
+        sys_exit(-1)
 
 copy_files()
 
